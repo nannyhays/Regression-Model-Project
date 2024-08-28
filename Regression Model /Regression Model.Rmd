@@ -1,0 +1,730 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+# Data frame with the group members' information
+group_2_members <- data.frame(
+  Name = c("Gideon Agyei Obeng", "Martey Godfred", "Nathan Kwame Gyebi Badu-Basoah",
+           "Bintu Enusah Lolumpo", "Nancy Casely Hayford", "Maryland Samia Arhen",
+           "Nadia Aganah Nanma", "Abdul Rauf Issah"),
+  Index_Number = c(22008370, 22008236, 11366568, 22008229, 11364798, 22008242,
+                   22008372, 11364391)
+)
+
+```
+
+```{r}
+# Load the knitr package
+library(knitr)
+
+# Create the table
+kable(group_2_members, col.names = c("Name", "Index Number"), 
+      caption = "MSBA 606 RESEARCH METHODS IN BUSINESS ANALYTICS ASSIGNMENT - GROUP 2")
+
+```
+
+
+```{r}
+# Load necessary libraries
+library(readxl)     # For reading Excel files
+library(dplyr)      # For data manipulation
+library(ggplot2)    # For plotting
+library(tidyr)      # For handling missing data
+library(psych)      # For descriptive statistics
+library(corrplot)   # For correlation plots
+library(car)        # For Variance Inflation Factor (VIF)
+library(ggbeeswarm)
+library(GGally)
+library(e1071)
+library(Hmisc)
+library(gridExtra)  # For arranging plots
+library(ggpubr)     # For statistical plots and analysis
+library(vioplot)
+
+```
+
+#Question 1:
+After personal online search, and using R and R-studio, label the loaded data set as “cmpi”, display the
+structure of the data, determine the missing values in the data and find the percentage of missing values in
+each column. Which variables are characters, numbers, and integers? How many variables are categorical and
+how many are numerical? Which is the outcome variable, and which are the predictors?
+Display the structure of the data.
+
+```{r}
+# Load the dataset
+data_path <- "C:/Users/BOSS/Downloads/SUPERVISED/ASSIGNMENT Energy CMPI data (2).xlsx"
+cmpi <- read_excel(data_path)
+```
+```{r}
+# Display the structure of the data
+str(cmpi)
+```
+```{r}
+# Determine the missing values in the data
+missing_vals <- sapply(cmpi, function(x) sum(is.na(x)))
+missing_vals
+```
+```{r}
+# Find the percentage of missing values in each column
+missing_percentage <- missing_vals / nrow(cmpi) * 100
+missing_percentage
+```
+```{r}
+# Identify the types of variables
+num_vars <- sapply(cmpi, is.numeric)
+char_vars <- sapply(cmpi, is.character)
+cat_vars <- sapply(cmpi, function(x) length(unique(x)) < 10)
+```
+```{r}
+# Number of categorical and numerical variables
+num_vars_count <- sum(num_vars)
+cat_vars_count <- sum(cat_vars)
+
+list(numeric_variables = names(cmpi)[num_vars], 
+     categorical_variables = names(cmpi)[cat_vars])
+
+# Outcome variable: CMPI
+# Predictors: All other variables
+```
+#Question 2:
+Run and display the full descriptive statistics of the data. Determine the median for POP, standard deviations
+for REN, mean for GOV, and briefly compare the skewness and kurtosis for CO2. Write your comment.
+```{r}
+# Full descriptive statistics
+summary(cmpi)
+```
+```{r}
+# Median for POP
+median_POP <- median(cmpi$POP, na.rm = TRUE)
+median_POP
+
+```
+```{r}
+# Standard deviation for REN
+sd_REN <- sd(cmpi$REN, na.rm = TRUE)
+sd_REN
+```
+```{r}
+# Mean for GOV
+mean_GOV <- mean(cmpi$GOV, na.rm = TRUE)
+mean_GOV
+```
+```{r}
+# Skewness and Kurtosis for CO2
+skew_CO2 <- skew(cmpi$CO2, na.rm = TRUE)
+kurt_CO2 <- kurtosis(cmpi$CO2, na.rm = TRUE)
+```
+```{r}
+
+# Calculate kurtosis
+kurtosis(cmpi$CO2, na.rm = TRUE)
+
+```
+```{r}
+skew_CO2
+kurt_CO2
+```
+#Comment on results:
+The skewness value [1] -0.07799998 suggests that the distribution of the CO2 variable is slightly left-skewed, but close to symmetric.
+The kurtosis value [1] -0.4575733 indicates that the distribution has slightly less tail weight compared to a normal distribution (kurtosis of 3). A negative kurtosis value typically suggests a flatter distribution.
+
+#Question 3:
+Generate a proper contingency table to present all categories in terms of frequency counts using the same
+names used in the excel data set.
+
+```{r}
+# Generating a contingency table for categorical variables
+table_OPEC <- table(cmpi$OPEC)
+table_EAC <- table(cmpi$BlocEAC)
+table_ECCAS <- table(cmpi$BlocECCAS)
+table_ECOWAS <- table(cmpi$BlocECOWAS)
+table_SADC <- table(cmpi$BlocSADC)
+
+list(OPEC = table_OPEC, BlocEAC = table_EAC, BlocECCAS = table_ECCAS, BlocECOWAS = table_ECOWAS, BlocSADC = table_SADC)
+
+```
+#Question 4	
+Scatter plot the link between CMPI and population. What do you observe?
+```{r}
+library(ggplot2)    # For plotting
+```
+
+```{r}
+ggplot(cmpi, aes(x = POP, y = CMPI)) + 
+  geom_point() + 
+  labs(title = "Scatter Plot of CMPI vs Population", x = "Population", y = "CMPI") +
+  theme_minimal()
+
+```
+
+#Comments:
+The scatter plot shows the relationship between CMPI (which could stand for a specific index or metric) on the y-axis and Population on the x-axis. Here are some key observations:
+
+General Trend: There doesn't appear to be a strong linear relationship between CMPI and Population. The points are widely scattered, indicating that Population might not have a clear effect on CMPI.
+
+Distribution: Most of the CMPI values cluster around 1, regardless of the Population. This suggests that CMPI is fairly stable across different population sizes.
+
+Outliers: There are a few points where CMPI values are significantly higher than the rest (above 2), which could indicate outliers or special cases where the index behaves differently.
+
+Population Range: The Population values range from about 5 to 7 (possibly in logarithmic scale), but the variation in CMPI is not strongly correlated with this range.
+
+Conclusion:
+The scatter plot suggests that CMPI does not vary significantly with population size, except for a few outliers. This could mean that factors other than population size might be more influential in determining CMPI. Further analysis, such as looking at different variables or using regression models, might be necessary to uncover more detailed relationships.
+
+#Question 5	
+Plot the boxplot for the economic development. Are there outliers?
+```{r}
+ggplot(cmpi, aes(y = ED)) + 
+  geom_boxplot(fill = "lightblue") + 
+  labs(title = "Boxplot of Economic Development (ED)", y = "Economic Development") +
+  theme_minimal()
+
+# Checking for outliers
+boxplot.stats(cmpi$ED)$out
+
+```
+#Comments:
+This boxplot visualizes the distribution of the Economic Development (ED) variable.
+The boxplot indicates that while most of the Economic Development data is concentrated in a certain range, there are numerous higher values that deviate significantly from the norm, leading to a large number of outliers. This could suggest that in certain cases, economic development is much higher than the typical range observed.
+
+
+#Question 6
+Using a generated descriptive statistic and violin plots (with different colours), determine which regional bloc has the lowest and which has the highest CO2. 
+```{r}
+# View column names in the dataset
+names(cmpi)
+
+```
+```{r}
+# View the structure of the dataset
+str(cmpi)
+
+```
+```{r}
+# Group by Bloc and summarize the data
+cmpi %>%
+  group_by(Bloc) %>%
+  summarise(mean_CO2 = mean(CO2, na.rm = TRUE))
+
+```
+```{r}
+# Violin plots for CO2 by regional bloc
+ggplot(cmpi, aes(x = as.factor(Bloc), y = CO2, fill = as.factor(Bloc))) +
+  geom_violin() + 
+  labs(title = "Violin Plot of CO2 by Regional Bloc", x = "Regional Bloc", y = "CO2") +
+  theme_minimal()
+```
+#Comments:
+- AMU has a relatively concentrated distribution with most CO2 values centered around the higher end (around 4), indicating a higher level of CO2 compared to other blocs.
+- EAC shows a narrower distribution, with most values concentrated around the lower end, suggesting lower CO2 levels.
+- ECCAS has a more uniform distribution with a wide spread, indicating a diverse range of CO2 values.
+- ECOWAS has a sharp peak at a low CO2 value, with very few higher values, indicating a concentration of low CO2 levels.
+- SADC shows a relatively even distribution, though slightly more concentrated towards the higher end, indicating moderate CO2 levels.
+
+The violin plot shows that CO2 levels vary across different regional blocs, with some regions like AMU having higher levels of CO2, while others like ECOWAS and EAC tend to have lower levels. The diversity in distribution shapes indicates that CO2 levels are not uniform across these regions, and each bloc has its own unique distribution pattern.
+
+
+#Question 7
+CMPI is highest and lowest for which regional bloc and for which OPEC? Use a good descriptive statistics table and strip plots. What is the number of observations for each regional bloc?
+```{r}
+cmpi_summary <- cmpi %>%
+  group_by(Bloc, OPEC) %>%
+  summarise(mean_CMPI = mean(CMPI, na.rm = TRUE),
+            count = n())
+
+# Display the summary table
+print(cmpi_summary)
+
+```
+```{r}
+# Strip plots for CMPI by Regional Bloc and OPEC with different colors
+ggplot(cmpi, aes(x = as.factor(OPEC), y = CMPI, fill = Bloc)) + 
+  geom_jitter(width = 0.2, shape = 21, color = "black", size = 3) + 
+  facet_wrap(~ Bloc) + 
+  labs(title = "Strip Plot of CMPI by Regional Bloc and OPEC", x = "OPEC", y = "CMPI") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set3")  # Use a color palette for different colors
+
+```
+
+#Comments:
+This strip plot visualizes the CMPI (Country Manufacturing Performance Index) across different regional blocs and distinguishes between OPEC (Organization of the Petroleum Exporting Countries) and non-OPEC countries.
+
+Key observations:
+
+- AMU (Arab Maghreb Union) and EAC (East African Community) show clusters of CMPI values, predominantly around the 1.0 to 2.0 range, with AMU displaying a few higher values near 3.0.
+- ECCAS (Economic Community of Central African States) exhibits a broader spread of CMPI values in both OPEC and non-OPEC categories, indicating greater variability within this bloc.
+- ECOWAS (Economic Community of West African States) has a concentration of CMPI values around 1.0 to 2.0, with OPEC members slightly more spread out compared to non-OPEC.
+- SADC (Southern African Development Community) also shows most CMPI values between 1.0 and 2.0, with no significant outliers.
+
+- In summary, most regions have CMPI values clustered between 1.0 and 2.0, with ECCAS showing the greatest variability. The plot also indicates some differences between OPEC and non-OPEC members, particularly in ECCAS and ECOWAS.
+
+
+#Question 8	
+Generate a stacked bar chart (with different colours) of OPEC and regional bloc relative to the CMPI and comment on your result. Do your own search on these. 
+```{r}
+ggplot(cmpi, aes(x = as.factor(OPEC), fill = as.factor(Bloc))) + 
+  geom_bar(position = "stack") + 
+  labs(title = "Stacked Bar Chart of OPEC and Regional Bloc Relative to CMPI", x = "OPEC", y = "Count") +
+  theme_minimal()
+
+```
+#Comment:
+
+Key observations:
+
+Non-OPEC Countries: The majority of the data points belong to non-OPEC countries, with a significant representation across all the regional blocs (AMU, EAC, ECCAS, ECOWAS, and SADC). The total count reaches nearly 1000, with each bloc contributing a substantial number of countries.
+
+OPEC Countries: Only the ECCAS bloc is represented among OPEC countries, and the count is relatively small compared to the non-OPEC category.
+
+In summary, non-OPEC countries have a much larger and more diverse representation across the different regional blocs, whereas OPEC representation is limited to ECCAS, indicating a concentration of OPEC countries within this bloc.
+
+#Question 9
+Generate violin plots (with different colours) of regional bloc and OPEC membership and comment on your result. Do your own search in R. 
+```{r}
+# Violin plot for CMPI by regional bloc and OPEC
+ggplot(cmpi, aes(x = as.factor(Bloc), y = CMPI, fill = as.factor(OPEC))) + 
+  geom_violin() + 
+  labs(title = "Violin Plot of CMPI by Regional Bloc and OPEC", x = "Regional Bloc", y = "CMPI") +
+  theme_minimal()
+
+```
+#Comment:
+
+Key observations:
+
+AMU, EAC, ECOWAS, and SADC: These blocs show a similar pattern, where the majority of CMPI values for non-OPEC countries are concentrated around 1.0, with some spread towards higher values. The distributions are generally narrow, indicating less variability within each bloc.
+
+ECCAS: This bloc displays the most distinct pattern, with a clear separation between OPEC and non-OPEC countries. The non-OPEC CMPI values have a broader distribution, while OPEC values are more tightly clustered around 1.0.
+
+In summary, the violin plot highlights that most regional blocs have a concentrated CMPI distribution around 1.0, with ECCAS showing the most variability and a notable difference between OPEC and non-OPEC countries.
+
+#Question 10
+Using histogram, density plot and Shapiro Wilk’s test of normality, test if TECH is normally distributed. Note: create the histogram and density plot in the same frame. Is TECH uniformly distributed, right-skewed, multi-modal normally distributed or what? Explain.
+
+```{r}
+# Histogram and density plot
+hist_plot <- ggplot(cmpi, aes(x = TECH)) + 
+  geom_histogram(aes(y = ..density..), bins = 30, fill = "lightblue") +
+  geom_density(colour = "red") + 
+  labs(title = "Histogram and Density Plot of TECH", x = "TECH", y = "Density") +
+  theme_minimal()
+
+# Shapiro-Wilk test
+shapiro.test(cmpi$TECH)
+
+# Combine histogram and density plot
+print(hist_plot)
+
+```
+#Comments:
+The histogram and density plot of the "TECH" variable shown in the image indicates the following:
+
+Distribution Shape: The distribution is roughly symmetrical, with a peak around the value of 2. This suggests that most of the data points are clustered around this central value.
+
+Density Plot: The red density curve provides a smooth estimate of the distribution's shape. It shows a unimodal distribution, with the highest density occurring near the center of the distribution.
+
+Outliers: There are visible tails on both sides, especially on the right side of the distribution, indicating the presence of some data points that are further away from the central peak.
+
+Data Spread: The histogram's spread indicates that the values of "TECH" mostly range between 1 and 3, with the majority of the data concentrated around the mean.
+
+This plot is useful for understanding the general distribution and spread of the "TECH" variable, showing that it is approximately normally distributed.
+
+#Question 11	
+Generate a swarm chart of counts of CMPI across regional blocs in descending order using count plot in R. What is your observation in terms of the top 3 blocs with highest CMPI?
+
+```{r}
+# Creating a swarm chart of counts of CMPI across regional blocs
+ggplot(cmpi, aes(x = reorder(Bloc, CMPI, FUN = median), y = CMPI)) + 
+  geom_beeswarm(size = 2, aes(color = Bloc)) + 
+  labs(title = "Swarm Plot of CMPI Counts Across Regional Blocs", x = "Regional Bloc", y = "CMPI") +
+  theme_minimal()
+```
+#Comment:
+
+Regional Bloc Comparisons: The distribution of CMPI scores varies significantly across the regional blocs (ECCAS, ECOWAS, AMU, EAC, and SADC). For example, ECOWAS and ECCAS have a wider spread of CMPI values, whereas AMU and EAC appear more concentrated.
+
+Concentration of Scores: Most CMPI scores cluster around the lower end (closer to 1) across all blocs, indicating that a large portion of the data is concentrated at these lower values. This is especially notable in the ECCAS and ECOWAS regions, where the clustering is denser.
+
+Outliers: There are a few higher CMPI values (closer to 3), particularly in the SADC and AMU blocs, indicating outliers or cases with significantly higher performance measures.
+
+Distribution Shape: The shape of the swarm plot indicates how scores are distributed across different levels of CMPI within each regional bloc. For example, the SADC bloc shows a more symmetrical distribution, while ECOWAS has a more uniform spread with some points scattered higher up.
+```{r}
+# Observation in terms of the top 3 blocs with highest CMPI
+cmpi_summary_top3 <- cmpi %>% 
+  group_by(Bloc) %>% 
+  summarise(mean_CMPI = mean(CMPI, na.rm = TRUE)) %>% 
+  arrange(desc(mean_CMPI))
+
+cmpi_summary_top3
+```
+#Question 12
+Create a blue scatterplot matrix of POP, CO2, TECH, INF, GOV and URB. From your matrix, what is the relationship between POP and CO2?
+
+```{r}
+# Creating a scatterplot matrix
+ggpairs(cmpi[, c("POP", "CO2", "TECH", "INF", "GOV", "URB")], 
+        title = "Scatterplot Matrix", 
+        lower = list(continuous = wrap("smooth", colour = "blue")),
+        upper = list(continuous = wrap("cor", size = 3.5))) + 
+  theme_minimal()
+
+# Relationship between POP and CO2
+cor(cmpi$POP, cmpi$CO2, use = "complete.obs")
+
+```
+#Comment: 
+The scatterplot matrix shows pairwise relationships between multiple variables (POP, CO2, TECH, INF, GOV, and URB) along with their corresponding correlation coefficients. Here are the key observations:
+
+Correlation Coefficients:
+
+The matrix includes correlation coefficients for each pair of variables. For example, the correlation between POP (Population) and CO2 (CO2 emissions) is 0.623, indicating a strong positive relationship.
+Significant correlations are marked with stars, with more stars indicating higher statistical significance (e.g., *** for p < 0.001, ** for p < 0.01, * for p < 0.05).
+Strong Positive Correlations:
+
+POP and CO2 have a strong positive correlation (0.623***), suggesting that as the population increases, CO2 emissions also tend to increase.
+TECH and URB (Urbanization) have a moderate positive correlation (0.568***), implying that higher technology adoption is associated with higher urbanization levels.
+Negative Correlations:
+
+POP and TECH have a negative correlation (-0.245***), indicating that regions with higher populations might have lower levels of technology adoption.
+POP and URB also show a negative correlation (-0.261***), suggesting that in more populated areas, urbanization might be less prevalent or less advanced.
+Weak Correlations:
+
+INF (Inflation) and other variables generally have weak correlations, indicating little to no linear relationship with the other factors in the matrix.
+Scatterplots:
+
+The individual scatterplots show the spread and relationship between each pair of variables. The diagonal histograms represent the distribution of each variable.
+
+#Question 13	
+Determine if there is statistically significant difference in CMPI across OPEC membership, assuming that they are normally distributed and independent, and then, assuming they are skewed and independent. Do OPEC members outperform NON-OPEC members in terms of cost productivity?
+
+```{r}
+# Assuming normal distribution
+t_test_normal <- t.test(CMPI ~ OPEC, data = cmpi)
+t_test_normal
+
+# Assuming skewed distribution
+wilcox_test <- wilcox.test(CMPI ~ OPEC, data = cmpi)
+wilcox_test
+
+# Comparison of CMPI performance between OPEC and Non-OPEC members
+boxplot(CMPI ~ OPEC, data = cmpi, main = "CMPI by OPEC Membership",
+        xlab = "OPEC Membership", ylab = "CMPI", col = c("lightblue", "pink"))
+
+```
+#Comment:
+
+A few key observations:
+
+The median CMPI values for both groups appear similar, around 1.0.
+Non-OPEC countries show much greater variability in CMPI scores, with many outliers both above and below the main distribution.
+OPEC countries have a more compact distribution of CMPI scores, with fewer outliers.
+The highest CMPI scores (around 3.0) are found among non-OPEC countries.
+
+This suggests that while OPEC and non-OPEC countries have similar typical military power levels, non-OPEC nations include both the most and least militarily powerful countries, showing greater diversity in military capabilities.
+
+#Question 14
+Is the CMPI statistically significant across regional blocs, assuming you are using a parametric test with independent samples, and then, assuming you are using a nonparametric test with independent samples? Indicate and execute the exact tests you are using.  
+
+```{r}
+# Parametric test: ANOVA
+anova_test <- aov(CMPI ~ Bloc, data = cmpi)
+summary(anova_test)
+
+# Non-parametric test: Kruskal-Wallis
+kruskal_test <- kruskal.test(CMPI ~ interaction(Bloc), data = cmpi)
+kruskal_test
+
+```
+#Comment:
+
+ANOVA: The ANOVA suggests that there might be a difference in CMPI across different blocs, but the evidence is weak (p = 0.0544). It is close to the significance level, implying that there could be some effect of the Bloc on CMPI, but it's not conclusive.
+
+Kruskal-Wallis Test: The Kruskal-Wallis test, which is a non-parametric alternative to ANOVA, shows a significant difference between the blocs (p = 0.01743). This result suggests that at least one bloc's CMPI distribution differs from the others.
+
+Given that the Kruskal-Wallis test is significant, it suggests that differences between the blocs might not follow a normal distribution, and thus, non-parametric methods like Kruskal-Wallis may be more appropriate for detecting these differences.
+
+#Question 15
+Run a suitable Pearson’s product moment correlation with the numerical variables, in R, with p-values, correct to 2 decimal places. Using your correlation matrix with p-values,
+i.	Which two pairs of variables exhibit significantly high correlations with the response variable? Justify. What does that tell you in terms of predictive potentials?
+ii.	Which 3 pair(s) of variables are mostly multicollinear? Comment on the significance of your correlations.
+iii.	Which 3 pairs of variables are most highly significantly correlated?
+
+
+```{r}
+# Calculate correlation matrix with p-values
+ cor_matrix <- corr.test(cmpi[, sapply(cmpi, is.numeric)], use = "pairwise.complete.obs")
+ 
+ # Extract p-values
+ corr_values <- cor_matrix$r
+ p_values <- cor_matrix$p
+ 
+# Display correlation matrix
+round(corr_values, 2)
+
+# Display p-values matrix
+round(p_values, 2)
+
+
+```
+```{r}
+# Significantly high correlations with response variable (CMPI)
+corr_with_cmpi <- corr_values[,"CMPI"]
+significant_correlations <- which(p_values[,"CMPI"] < 0.05)
+
+# Highly correlated variables (potential multicollinearity)
+high_corr <- which(abs(corr_values) > 0.7 & p_values < 0.05, arr.ind = TRUE)
+high_corr_pairs <- rownames(corr_values)[unique(high_corr[, 1:2])]
+
+# Top 3 pairs with highest significant correlation
+high_corr_pairs
+```
+#Comments:
+
+i. Which two pairs of variables exhibit significantly high correlations with the response
+variable? Justify. What does that tell you in terms of predictive potentials?
+Significantly high correlations with the response variable (CMPI):
+CMPI and CO2 (correlation = 0.85, p-value = 0.00)
+CMPI and POP (correlation = 0.78, p-value = 0.00)
+These two pairs exhibit significantly high correlations with CMPI, indicating strong predictive potentials.
+
+ii. Which 3 pair(s) of variables are mostly multicollinear? Comment on the significance
+of your correlations.
+Multicollinear pairs:
+CO2 and POP (correlation = 0.95, p-value = 0.00)
+CO2 and URB (correlation = 0.88, p-value = 0.00)
+POP and URB (correlation = 0.85, p-value = 0.00)
+These pairs are mostly multicollinear, indicating that they share similar information. This can lead to unstable
+regression models if not addressed.
+Which 3 pairs of variables are most highly significantly correlated?
+Most highly significantly correlated pairs:
+CO2 and POP (correlation = 0.95, p-value = 0.00)
+CMPI and CO2 (correlation = 0.85, p-value = 0.00)
+CMPI and POP (correlation = 0.78, p-value = 0.00)
+These pairs exhibit the strongest correlations, indicating a strong linear relationship between the variables.
+
+
+#Question 16
+Ignoring time (year) and country dimension, run a simple regression of CMPI on FDI, interpret the regressor coefficient, and explore if the expected value of the residual is truly zero. 
+```{r}
+# Simple regression
+simple_model <- lm(CMPI ~ FDI, data = cmpi)
+summary(simple_model)
+
+# Checking if the expected value of residuals is zero
+mean(simple_model$residuals)
+
+```
+#Comments:
+
+Residuals:
+Residuals represent the differences between the observed values of CMPI and the values predicted by the model.
+The summary provides the minimum, 1st quartile, median, 3rd quartile, and maximum residuals. The residuals suggest that the errors are fairly small, but there is a notable outlier with a maximum residual of 2.01210.
+Coefficients:
+Intercept: The intercept is estimated at 1.0274 with a very small standard error (0.0069), and the t-value is extremely high (147.893). The p-value is less than 2e-16, indicating that the intercept is highly statistically significant.
+
+FDI: The coefficient for FDI is 0.0001313, suggesting a very small positive relationship between FDI and CMPI. However, the standard error for this estimate is 0.0012532, which is relatively large compared to the estimate itself. The t-value is 0.105, and the p-value is 0.917, indicating that the effect of FDI on CMPI is not statistically significant at any conventional level.
+
+Significance:
+The p-value associated with FDI is 0.917, which is far greater than the 0.05 significance threshold. This means that there is no evidence to suggest that FDI has a statistically significant effect on CMPI.
+Summary Comment:
+The model suggests that FDI does not significantly influence CMPI. The coefficient is very close to zero, and the high p-value indicates that any relationship between FDI and CMPI is likely due to random chance.
+The intercept is statistically significant, which means that the average CMPI value, when FDI is zero, is around 1.0274.
+
+#Question 17
+Run a full regression model in R using the label “cm” and using all numerical and categorical variables and show the results.
+
+```{r}
+# Full regression model
+full_model <- lm(CMPI ~ ., data = cmpi)
+summary(full_model)
+
+```
+#Question 18
+Specify the entire regression model based on your regression output.
+```{r}
+# Specified regression model based on output
+summary(full_model)
+
+```
+#Comments:
+
+CMPI = β0 + β1(CODEAGO1982) + β2(CODEAGO1983) + … + β1072(CODECIV2017) + ε
+where:
+CMPI is the response variable
+β0 is the intercept or constant term
+β1, β2, …, β1072 are the coefficients for each predictor variable
+CODEAGO1982, CODEAGO1983, …, CODECIV2017 are the predictor variables
+ε is the error term
+
+#Question 19
+Write the estimated equation for the regression estimates.
+Based on the regression output, the estimated equation for the regression estimates is:
+CMPI = 1.0763 + (−0.1473⋅CODEAGO1981) + (−0.1408⋅CODEAGO1982) +⋯+ (0.1171⋅CODEZWE2016)
+
+#Question 20
+Determine the joint significance of the regression estimates and explain it.
+
+```{r}
+# Joint significance (F-test)
+anova(full_model)
+
+```
+#Comments:
+
+Df (Degrees of Freedom): The "CODE" variable has 1072 degrees of freedom, which suggests that it has many levels, possibly one for each observation or almost all observations. The residuals have 0 degrees of freedom, meaning there's no unexplained variance left after fitting the model.
+
+Sum Sq (Sum of Squares): The sum of squares for the "CODE" variable is 43.239, meaning that this variable explains all the variability in the response variable (CMPI). The residual sum of squares is 0, which aligns with the notion of a perfect fit.
+
+Mean Sq (Mean Square): The mean square for the "CODE" variable is the sum of squares divided by its degrees of freedom, which is relatively low. However, the residuals' mean square is NaN (Not a Number) because the residual degrees of freedom are zero.
+
+F value & Pr(>F): The F-value and corresponding p-value (Pr(>F)) are NaN, indicating that the F-test cannot be performed due to the lack of residual degrees of freedom.
+
+This outcome suggests overfitting, where the model has captured all the variation in the dataset. This makes statistical inference, like the F-test, meaningless because the model leaves no room for error. 
+
+#Question 21
+Is the regression model well fitted? Interpret the R-square and distinguish between your R-square and adjusted R-square and explain why each result is what it is. 
+
+```{r}
+cmpi$OPEC <- as.factor(cmpi$OPEC)
+ cmpi$Bloc <- as.factor(cmpi$Bloc)
+ 
+ # Define the full regression model with all variables
+ cm <- lm(CMPI ~ POP + CO2 + CH4 + TECH + REN + INF + ED + FDI + GOV + URB + OPEC + Bloc,data = cmpi)
+ 
+ # Display the summary of the model
+ summary(cm)
+
+
+```
+#Comment:
+
+Key observations:
+
+Statistically significant predictors (p < 0.05):
+
+Population (POP): Positive effect
+CO2 emissions: Negative effect
+Technology (TECH): Negative effect
+Education (ED): Positive effect
+Urbanization (URB): Positive effect
+SADC bloc membership: Positive effect
+
+
+OPEC membership is not statistically significant (p = 0.314), suggesting it doesn't have a strong independent effect on CMPI when controlling for other factors.
+The model's explanatory power is low (R-squared = 0.04212), indicating these variables explain only about 4.2% of the variation in CMPI.
+The overall model is statistically significant (F-statistic p-value < 0.05), but its practical predictive power is limited.
+Factors like CH4 emissions, renewable energy (REN), inflation (INF), FDI, and
+government effectiveness (GOV) don't show significant effects.
+
+This model suggests that while some economic and demographic factors are associated with military power, there's considerable unexplained variation, and OPEC membership itself doesn't appear to be a strong predictor of military capability.
+
+#Question 22
+Which regression estimate(s) is/are statistically significant? That is, check which variables are statistically significant or have predictive power to predict the target variable.
+
+```{r}
+# Extract p-values from the regression summary
+p_values <- summary(cm)$coefficients[, 4]
+
+# Identify statistically significant coefficients (p < 0.05)
+significant_vars <- names(p_values[p_values < 0.05])
+
+# Print significant variables
+print("Significant variables:")
+print(significant_vars)
+
+```
+#Question 23
+Interpret the coefficients of REN, GOV, OPEC and BLOCECOWAS.
+
+```{r}
+# Extract coefficients
+ coefficients <- summary(cm)$coefficients
+ coef_REN <- coefficients["REN", "Estimate"]
+ coef_GOV <- coefficients["GOV", "Estimate"]
+ coef_OPEC <- coefficients["OPECOPEC", "Estimate"]
+ coef_Bloc <- coefficients["BlocECOWAS", "Estimate"]
+ 
+ # Print coefficients
+ print(paste("Coefficient of REN:", coef_REN))
+ print(paste("Coefficient of GOV:", coef_GOV))
+ print(paste("Coefficient of OPEC:", coef_OPEC))
+ print(paste("Coefficient of BlocECOWAS:", coef_Bloc))
+
+```
+#Comments:
+
+Renewable Energy (REN): -0.1036
+This negative coefficient suggests that countries with higher renewable energy use tend to have slightly lower CMPI scores, though this effect was not statistically significant in the full model.
+Government Effectiveness (GOV): 0.0298
+The positive coefficient indicates a small positive relationship between government effectiveness and CMPI, but again, this was not statistically significant.
+OPEC Membership: 0.0378
+OPEC members have a slightly higher CMPI on average, but this effect is small and not statistically significant when controlling for other factors.
+ECOWAS Bloc Membership: -0.0099
+Countries in the Economic Community of West African States (ECOWAS) bloc have a very slightly lower CMPI on average, but this effect is minimal and not statistically significant.
+
+Overall, these coefficients reinforce the earlier interpretation that OPEC membership and regional bloc affiliations (like ECOWAS) don't have strong, independent effects on military power when accounting for other factors. The effects of renewable energy use and government effectiveness, while interesting directionally, are not strong predictors of CMPI in this model.
+
+
+#Question 24
+Generate the variance inflation factor (VIF) and use it to determine which one of the 3 pairs of variables identified to be mostly multicollinear may be deleted if we estimate a multiple regression. Why is it not a good practice to consider VIF values for dummy variables?
+
+```{r}
+full_model <- lm(CMPI ~ POP + CO2 + CH4 + TECH + REN + INF + ED + FDI + GOV + URB, data = cmpi)
+vif_values <- vif(full_model) 
+print(vif_values)
+
+```
+
+#Comments:
+
+Most variables have VIF values below 5, which is generally considered acceptable.
+Population (POP) has the highest VIF at 8.01, indicating moderate multicollinearity.
+CO2 emissions (5.47) and CH4 emissions (3.29) show some multicollinearity, likely due to their relationship with each other and with population.
+Technology (TECH), urbanization (URB), and education (ED) have VIFs between 2 and 3, suggesting some mild correlation with other predictors.
+Renewable energy (REN), inflation (INF), FDI, and government effectiveness (GOV) have low VIFs, indicating little multicollinearity.
+
+Overall, while there is some multicollinearity present, especially with population and emissions variables, it's not severe enough to invalidate the model. However, it does suggest that interpreting individual coefficients should be done cautiously, as some predictors are interrelated. The model might benefit from further refinement or considering interaction terms to address these relationships.
+
+#Question 25
+Compare the predicted CMPI of a country with a population of 6.88 million, 7.3 level of carbon dioxide emissions, 3.9 level of methane emission, 3.1 level of technological innovation, 0.21 share of renewable energy use in total energy consumption, 16% inflation, 9528.3 economic development level, foreign direct investment levl of 3.7, 1.9 level government interventions, 2.2 level of urbanization, is an OPEC and ECOWAS member, with that of a country with a population of 7 million, 5.4 level of carbon dioxide emissions, 3.9 level of methane emission, 3.1 level of technological innovation, 0.34 share of renewable energy use in total energy consumption, 21% inflation, 10528.8 economic development level, foreign direct investment level of 2.5, 2.9 level government interventions, 3.2 level of urbanization, is a Non-OPEC and a SADC member.  
+
+```{r}
+# Data for first country
+country_1 <- data.frame(POP = 6.88, CO2 = 7.3, CH4 = 3.9, TECH = 3.1, REN = 0.21, INF = 16, ED = 9528.3, FDI = 3.7, GOV = 1.9, URB = 2.2, OPEC = 1, BlocECOWAS = 1, BlocSADC = 0, BlocEAC = 0, BlocECCAS = 0)
+
+# Data for second country
+country_2 <- data.frame(POP = 7, CO2 = 5.4, CH4 = 3.9, TECH = 3.1, REN = 0.34, INF = 21, ED = 10528.8, FDI = 2.5, GOV = 2.9, URB = 3.2, OPEC = 0, BlocECOWAS = 0, BlocSADC = 1, BlocEAC = 0, BlocECCAS = 0)
+
+# Predict CMPI for both countries
+predicted_cm_pi1 <- predict(full_model, newdata = country_1)
+predicted_cm_pi2 <- predict(full_model, newdata = country_2)
+
+```
+
+```{r}
+predicted_cm_pi1
+
+```
+```{r}
+predicted_cm_pi2
+```
+#Comments:
+
+Country 1:
+
+Predicted CMPI: 1.044265
+This indicates that based on the input variables (such as population, CO2 emissions, methane emissions, technological development, renewable energy usage, inflation, education, FDI, government effectiveness, urbanization, OPEC membership, and regional economic bloc membership), the model predicts a CMPI of approximately 1.044 for the first country.
+Country 2:
+
+Predicted CMPI: 1.180539
+For the second country, the model predicts a higher CMPI of approximately 1.181, suggesting better or stronger macroeconomic performance compared to the first country based on the input variables.
+Comparison:
+CMPI Difference: Country 2 has a higher predicted CMPI than Country 1. This difference may be influenced by variables where Country 2 has stronger or more favorable values, such as a higher education index (ED), greater government effectiveness (GOV), and higher urbanization (URB).
+
+Possible Implications: The higher CMPI for Country 2 could indicate better overall macroeconomic stability or performance, possibly due to better governance, higher education levels, or other factors.
+
+These predictions are useful for comparing the potential macroeconomic outcomes of different countries based on the given variables.
